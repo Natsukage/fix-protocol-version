@@ -12,7 +12,9 @@ import net.mamoe.mirai.utils.*
 import org.asynchttpclient.*
 import java.time.Duration
 import kotlin.coroutines.*
-
+private val jsonConfig = Json {
+    ignoreUnknownKeys = true
+}
 public class UnidbgFetchQsign(private val server: String, private val key: String, coroutineContext: CoroutineContext) :
     EncryptService, CoroutineScope {
 
@@ -86,7 +88,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("qimei36", qimei36)
             .addQueryParam("key", key)
             .execute().get()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+        val body = jsonConfig.decodeFromString(DataWrapper.serializer(), response.responseBody)
         body.check(uin = uin)
 
         logger.info("Bot(${uin}) register, ${body.message}")
@@ -98,7 +100,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("key", key)
             .execute().get()
         if (response.statusCode == 404) return
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+        val body = jsonConfig.decodeFromString(DataWrapper.serializer(), response.responseBody)
 
         logger.info("Bot(${uin}) destroy, ${body.message}")
     }
@@ -133,12 +135,12 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("salt", salt.toUHexString(""))
             .addQueryParam("data", data)
             .execute().get()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+        val body = jsonConfig.decodeFromString(DataWrapper.serializer(), response.responseBody)
         body.check(uin = uin)
 
         logger.debug("Bot(${uin}) custom_energy ${data}, ${body.message}")
 
-        return Json.decodeFromJsonElement(String.serializer(), body.data)
+        return jsonConfig.decodeFromJsonElement(String.serializer(), body.data)
     }
 
     override fun qSecurityGetSign(
@@ -188,24 +190,24 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addFormParam("seq", seq.toString())
             .addFormParam("buffer", buffer.toUHexString(""))
             .execute().get()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+        val body = jsonConfig.decodeFromString(DataWrapper.serializer(), response.responseBody)
         body.check(uin = uin)
 
         logger.debug("Bot(${uin}) sign ${cmd}, ${body.message}")
 
-        return Json.decodeFromJsonElement(SignResult.serializer(), body.data)
+        return jsonConfig.decodeFromJsonElement(SignResult.serializer(), body.data)
     }
 
     private fun requestToken(uin: Long): List<RequestCallback> {
         val response = client.prepareGet("${server}/request_token")
             .addQueryParam("uin", uin.toString())
             .execute().get()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+        val body = jsonConfig.decodeFromString(DataWrapper.serializer(), response.responseBody)
         body.check(uin = uin)
 
         logger.info("Bot(${uin}) request_token, ${body.message}")
 
-        return Json.decodeFromJsonElement(ListSerializer(RequestCallback.serializer()), body.data)
+        return jsonConfig.decodeFromJsonElement(ListSerializer(RequestCallback.serializer()), body.data)
     }
 
     private fun submit(uin: Long, cmd: String, callbackId: Long, buffer: ByteArray) {
@@ -215,7 +217,7 @@ public class UnidbgFetchQsign(private val server: String, private val key: Strin
             .addQueryParam("callback_id", callbackId.toString())
             .addQueryParam("buffer", buffer.toUHexString(""))
             .execute().get()
-        val body = Json.decodeFromString(DataWrapper.serializer(), response.responseBody)
+        val body = jsonConfig.decodeFromString(DataWrapper.serializer(), response.responseBody)
         body.check(uin = uin)
 
         logger.debug("Bot(${uin}) submit ${cmd}, ${body.message}")
